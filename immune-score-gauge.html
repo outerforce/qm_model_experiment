@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>免疫功能评分仪表盘</title>
+  <style>
+    :root {
+      --blue: #243f8f;
+      --pale: #eaf4ff;
+      --text: #121212;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+    }
+
+    .wrap {
+      width: min(960px, 96vw);
+      padding: 22px;
+    }
+
+    .gauge-card {
+      position: relative;
+      max-width: 860px;
+      margin: 0 auto;
+      border-radius: 28px;
+      background: #fff;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      overflow: visible;
+    }
+
+    .outer-arc,
+    .inner-arc {
+      fill: none;
+      stroke-linecap: round;
+    }
+
+    .outer-arc {
+      stroke-width: 34;
+    }
+
+    .inner-arc {
+      stroke: var(--pale);
+      stroke-width: 24;
+      opacity: 0.82;
+    }
+
+    .zone-label {
+      fill: var(--blue);
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+
+    .needle {
+      fill: var(--blue);
+      filter: drop-shadow(0 3px 3px rgb(36 63 143 / 18%));
+      transform-origin: 420px 360px;
+      transition: transform 450ms cubic-bezier(.22, .61, .36, 1);
+    }
+
+    .needle-dot {
+      fill: var(--blue);
+    }
+
+    .highlight {
+      fill: #fff;
+      filter: url(#glow);
+      transition: cx 450ms cubic-bezier(.22, .61, .36, 1),
+        cy 450ms cubic-bezier(.22, .61, .36, 1);
+    }
+
+    .score {
+      fill: var(--blue);
+      font-size: 132px;
+      font-weight: 800;
+      letter-spacing: -8px;
+    }
+
+    .score-unit {
+      fill: var(--blue);
+      font-size: 44px;
+      font-weight: 800;
+    }
+
+    .caption {
+      fill: var(--text);
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .controls {
+      max-width: 560px;
+      margin: 16px auto 0;
+      display: grid;
+      grid-template-columns: 1fr 96px;
+      gap: 14px;
+      align-items: center;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--blue);
+    }
+
+    input[type="number"] {
+      width: 96px;
+      padding: 9px 10px;
+      border: 1px solid #ccd7ee;
+      border-radius: 10px;
+      color: var(--blue);
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+      outline: none;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgb(36 63 143 / 12%);
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="gauge-card" aria-label="免疫功能评分仪表盘">
+      <svg viewBox="0 0 840 560" role="img" aria-labelledby="gaugeTitle gaugeDesc">
+        <title id="gaugeTitle">免疫功能评估结果</title>
+        <desc id="gaugeDesc">输入 0 到 200 的分数，指针和高光会沿半圆仪表盘移动。</desc>
+
+        <defs>
+          <linearGradient id="arcGradient" x1="90" y1="0" x2="750" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#1aa9df" />
+            <stop offset="37%" stop-color="#35df7b" />
+            <stop offset="67%" stop-color="#e0e823" />
+            <stop offset="100%" stop-color="#ff5416" />
+          </linearGradient>
+
+          <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feColorMatrix
+              in="blur"
+              type="matrix"
+              values="1 0 0 0 1
+                      0 1 0 0 1
+                      0 0 1 0 1
+                      0 0 0 0.95 0"
+              result="whiteGlow"
+            />
+            <feMerge>
+              <feMergeNode in="whiteGlow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <path id="outerArc" class="outer-arc" stroke="url(#arcGradient)" />
+
+        <path class="inner-arc" d="M 163.86 427.66 A 284 284 0 0 1 300.64 103.15" />
+        <path class="inner-arc" d="M 355.88 83.56 A 284 284 0 0 1 484.12 83.56" />
+        <path class="inner-arc" d="M 539.36 103.15 A 284 284 0 0 1 676.14 427.66" />
+
+        <text class="zone-label" x="162" y="318" transform="rotate(-74 162 318)">下降</text>
+        <text class="zone-label" x="420" y="84" text-anchor="middle">正常</text>
+        <text class="zone-label" x="678" y="318" transform="rotate(74 678 318)">升高</text>
+
+        <circle id="highlight" class="highlight" r="17" cx="0" cy="0" />
+
+        <g id="needle" class="needle">
+          <path d="M 420 78 L 407 134 L 433 134 Z" />
+          <circle class="needle-dot" cx="420" cy="146" r="7" />
+        </g>
+
+        <text id="scoreText" class="score" x="420" y="370" text-anchor="middle">83</text>
+        <text class="score-unit" x="555" y="370">分</text>
+        <text class="caption" x="420" y="430" text-anchor="middle">您的免疫功能评估结果</text>
+      </svg>
+    </section>
+
+    <div class="controls">
+      <input id="scoreRange" type="range" min="0" max="200" value="83" />
+      <input id="scoreInput" type="number" min="0" max="200" value="83" aria-label="输入分数" />
+    </div>
+  </main>
+
+  <script>
+    const MIN_SCORE = 0;
+    const MAX_SCORE = 200;
+    const START_ANGLE = 160;
+    const END_ANGLE = 380;
+    const CENTER = { x: 420, y: 360 };
+    const ARC_RADIUS = 340;
+    const HIGHLIGHT_RADIUS = 340;
+
+    const outerArc = document.querySelector("#outerArc");
+    const highlight = document.querySelector("#highlight");
+    const needle = document.querySelector("#needle");
+    const scoreText = document.querySelector("#scoreText");
+    const scoreRange = document.querySelector("#scoreRange");
+    const scoreInput = document.querySelector("#scoreInput");
+
+    function polarToCartesian(radius, angleDeg) {
+      const angleRad = (angleDeg * Math.PI) / 180;
+      return {
+        x: CENTER.x + radius * Math.cos(angleRad),
+        y: CENTER.y + radius * Math.sin(angleRad),
+      };
+    }
+
+    function arcPath(radius, startAngle, endAngle) {
+      const start = polarToCartesian(radius, startAngle);
+      const end = polarToCartesian(radius, endAngle);
+      const largeArcFlag = endAngle - startAngle <= 180 ? 0 : 1;
+      return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`;
+    }
+
+    function clampScore(value) {
+      const parsed = Number(value);
+      if (Number.isNaN(parsed)) return MIN_SCORE;
+      return Math.min(MAX_SCORE, Math.max(MIN_SCORE, parsed));
+    }
+
+    function scoreToAngle(score) {
+      const progress = (score - MIN_SCORE) / (MAX_SCORE - MIN_SCORE);
+      return START_ANGLE + progress * (END_ANGLE - START_ANGLE);
+    }
+
+    function updateGauge(value) {
+      const score = clampScore(value);
+      const angle = scoreToAngle(score);
+      const brightPoint = polarToCartesian(HIGHLIGHT_RADIUS, angle);
+
+      scoreText.textContent = Math.round(score);
+      scoreRange.value = score;
+      scoreInput.value = Math.round(score);
+      highlight.setAttribute("cx", brightPoint.x);
+      highlight.setAttribute("cy", brightPoint.y);
+      needle.style.transform = `rotate(${angle - 270}deg)`;
+    }
+
+    outerArc.setAttribute("d", arcPath(ARC_RADIUS, START_ANGLE, END_ANGLE));
+    updateGauge(83);
+
+    scoreRange.addEventListener("input", (event) => updateGauge(event.target.value));
+    scoreInput.addEventListener("input", (event) => updateGauge(event.target.value));
+    scoreInput.addEventListener("blur", (event) => updateGauge(event.target.value));
+  </script>
+</body>
+</html>
